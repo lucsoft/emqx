@@ -47,6 +47,7 @@
 -define(CLIENTS_API(METHOD, FN), ?API(emqx_mgmt_api_clients, METHOD, FN)).
 -define(RETAINER_API(METHOD, FN), ?API(emqx_retainer_api, METHOD, FN)).
 -define(DELAYED_API(METHOD, FN), ?API(emqx_delayed_api, METHOD, FN)).
+-define(API_KEY_API(METHOD, FN), ?API(emqx_mgmt_api_api_keys, METHOD, FN)).
 
 %%=====================================================================
 %% API
@@ -356,6 +357,14 @@ do_check_rbac(
     %% file management.  The handlers isolate each namespace to its own backup
     %% directory, so a namespaced administrator only ever sees or acts on its
     %% own archives, never global (or legacy) ones.
+    true;
+do_check_rbac(#{?role := ?ROLE_SUPERUSER, ?namespace := Namespace}, _Req, ?API_KEY_API(_, _)) when
+    is_binary(Namespace)
+->
+    %% Namespaced administrators may manage API keys within their own namespace.
+    %% The handler enforces that the request's effective namespace (create) or the
+    %% target key's namespace (read/update/delete) matches the caller's; global and
+    %% cross-namespace keys are rejected or hidden there.
     true;
 do_check_rbac(_, _, _) ->
     {error, <<"You don't have permission to access this resource">>}.
