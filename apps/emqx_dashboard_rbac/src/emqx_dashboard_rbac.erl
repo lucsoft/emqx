@@ -14,6 +14,7 @@
     check_login_user_scopes/2,
     parse_dashboard_role/1,
     parse_api_role/1,
+    serialize_role/1,
     role_list/1
 ]).
 
@@ -118,6 +119,13 @@ check_login_user_scopes_for_path(Username, Path) ->
 
 parse_api_role(Role) ->
     parse_role(api, Role).
+
+-doc "Render a parsed role map back to its wire string (inverse of `parse_api_role/1`).".
+-spec serialize_role(#{?role := role(), ?namespace := ?global_ns | namespace()}) -> role().
+serialize_role(#{?role := Role, ?namespace := ?global_ns}) ->
+    Role;
+serialize_role(#{?role := Role, ?namespace := Namespace}) when is_binary(Namespace) ->
+    <<"ns:", Namespace/binary, "::", Role/binary>>.
 
 check_login_user_scopes_strict(Username, Path) ->
     %% Always work on the effective scope list (role-default expanded)
